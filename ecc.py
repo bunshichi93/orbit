@@ -63,7 +63,7 @@ for i in range(len(r_o)):
      per[i] = c[0]
      afe[i] = c[1]
      T[i] = c[2]*2/3600./24.
-print per
-print afe
-print T
-print "\n"
+     print per[i]
+     print afe[i]
+     print T[i]
+     print "\n"
