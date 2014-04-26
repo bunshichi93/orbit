@@ -122,6 +122,8 @@ def orbit(cond):
     # Coordinate cartesiane (r_x, r_y) e polari (phi, r) dei pianeti.
     r_x = [[0]*Nstep, [0]*Nstep]
     r_y = [[0]*Nstep, [0]*Nstep]
+#    r_x = [[0]*2, [0]*2]
+#    r_y = [[0]*2, [0]*2]
     phi = [[0]*Nstep, [0]*Nstep] 
     r = [[0]*Nstep, [0]*Nstep]   
     # velocità #
@@ -132,6 +134,8 @@ def orbit(cond):
     # in N          #
     a_x = [[0]*Nstep, [0]*Nstep]
     a_y = [[0]*Nstep, [0]*Nstep]
+#    a_x = [[0]*2, [0]*2]
+#    a_y = [[0]*2, [0]*2]
     
     # condizioni iniziali istante 0
     r_x[0][0] = r0_xt
@@ -152,8 +156,8 @@ def orbit(cond):
 
     a_x[0][0] = -G*mp*(r_x[1][0] - r_x[0][0])/r_rel**3 -G*ms*r_x[0][0]/r[0][0]**3
     a_y[0][0] = -G*mp*(r_y[1][0] - r_y[0][0])/r_rel**3 -G*ms*r_y[0][0]/r[0][0]**3
-    a_x[1][0] = -G*ms*r_x[1][0]/r[1][0]**3*cond
-    a_y[1][0] = -G*ms*r_y[1][0]/r[1][0]**3*cond
+    a_x[1][0] = (-G*mp*(r_x[0][0] - r_x[1][0])/r_rel**3 -G*ms*r_x[1][0]/r[1][0]**3)*cond
+    a_y[1][0] = (-G*mp*(r_y[0][0] - r_y[1][0])/r_rel**3 -G*ms*r_y[1][0]/r[1][0]**3)*cond
 
     print "Calcolo dati:"
     for i in range(Nstep-1):
@@ -162,18 +166,26 @@ def orbit(cond):
         ### Giove
         # calcolo dati sfruttando Velocity-Verlet
         # parte 1
-        r_x[1][i+1] = r_x[1][i] + v_x[1][i]*tau + 0.5*a_x[1][i]*tau**2
-        r_y[1][i+1] = r_y[1][i] + v_y[1][i]*tau + 0.5*a_y[1][i]*tau**2
+#        r_x[1][i+1] = r_x[1][i] + v_x[1][i]*tau + 0.5*a_x[1][i]*tau**2
+#        r_y[1][i+1] = r_y[1][i] + v_y[1][i]*tau + 0.5*a_y[1][i]*tau**2
+        r_x[1][1] = r_x[1][0] + v_x[1][i]*tau + 0.5*a_x[1][0]*tau**2
+        r_y[1][1] = r_y[1][0] + v_y[1][i]*tau + 0.5*a_y[1][0]*tau**2
+
         # conversione coordinate cartesiane in polari
-        coo_p = polar(r_x[1][i+1] + r_y[1][i+1]*1j)
+#        coo_p = polar(r_x[1][i+1] + r_y[1][i+1]*1j)
+        coo_p = polar(r_x[1][1] + r_y[1][1]*1j)
         r[1][i+1] = coo_p[0]
         phi[1][i+1] = coo_p[1]
         # calcolo dati sfruttando Velocity-Verlet
         # parte 2
-        a_x[1][i+1] = -G*ms*r_x[1][i+1]/r[1][i+1]**3*cond
-        a_y[1][i+1] = -G*ms*r_y[1][i+1]/r[1][i+1]**3*cond
-        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][i] + a_x[1][i+1])
-        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][i] + a_y[1][i+1])
+#        a_x[1][i+1] = -G*ms*r_x[1][i+1]/r[1][i+1]**3*cond
+#        a_y[1][i+1] = -G*ms*r_y[1][i+1]/r[1][i+1]**3*cond
+#        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][i] + a_x[1][i+1])
+#        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][i] + a_y[1][i+1])
+        a_x[1][1] = -G*ms*r_x[1][1]/r[1][i+1]**3*cond
+        a_y[1][1] = -G*ms*r_y[1][1]/r[1][i+1]**3*cond
+        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][0] + a_x[1][1])
+        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][0] + a_y[1][1])
         ##############################
         ##############################
         
@@ -182,22 +194,37 @@ def orbit(cond):
         ### Terra
         # calcolo dati sfruttando Velocity-Verlet
         # parte 1
-        r_x[0][i+1] = r_x[0][i] + v_x[0][i]*tau + 0.5*a_x[0][i]*tau**2
-        r_y[0][i+1] = r_y[0][i] + v_y[0][i]*tau + 0.5*a_y[0][i]*tau**2
+#        r_x[0][i+1] = r_x[0][i] + v_x[0][i]*tau + 0.5*a_x[0][i]*tau**2
+#        r_y[0][i+1] = r_y[0][i] + v_y[0][i]*tau + 0.5*a_y[0][i]*tau**2
+        r_x[0][1] = r_x[0][0] + v_x[0][i]*tau + 0.5*a_x[0][0]*tau**2
+        r_y[0][1] = r_y[0][0] + v_y[0][i]*tau + 0.5*a_y[0][0]*tau**2
         # conversione coordinate cartesiane in polari
-        coo_p = polar(r_x[0][i+1] + r_y[0][i+1]*1j)
+#        coo_p = polar(r_x[0][i+1] + r_y[0][i+1]*1j)
+        coo_p = polar(r_x[0][1] + r_y[0][1]*1j)
         r[0][i+1] = coo_p[0]
         phi[0][i+1] = coo_p[1]
         # calcolo dati sfruttando Velocity-Verlet
         # parte 2
-        r_rel = sqrt((r_x[0][i+1] - r_x[1][i+1])**2 + (r_y[0][i+1] - r_y[1][i+1])**2)
-        a_x[0][i+1] = -G*ms*r_x[0][i+1]/r[0][i+1]**3 - G*mp*(r_x[1][i+1] - r_x[0][i+1])/r_rel**3
-        a_y[0][i+1] = -G*ms*r_y[0][i+1]/r[0][i+1]**3 - G*mp*(r_y[1][i+1] - r_y[0][i+1])/r_rel**3
-        v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][i] + a_x[0][i+1])
-        v_y[0][i+1] = v_y[0][i] + 0.5*tau*(a_y[0][i] + a_y[0][i+1])
+#        r_rel = sqrt((r_x[0][i+1] - r_x[1][i+1])**2 + (r_y[0][i+1] - r_y[1][i+1])**2)
+        r_rel = sqrt((r_x[0][1] - r_x[1][1])**2 + (r_y[0][1] - r_y[1][1])**2)
+#        a_x[0][i+1] = -G*ms*r_x[0][i+1]/r[0][i+1]**3 - G*mp*(r_x[1][i+1] - r_x[0][i+1])/r_rel**3
+#        a_y[0][i+1] = -G*ms*r_y[0][i+1]/r[0][i+1]**3 - G*mp*(r_y[1][i+1] - r_y[0][i+1])/r_rel**3
+#        v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][i] + a_x[0][i+1])
+#        v_y[0][i+1] = v_y[0][i] + 0.5*tau*(a_y[0][i] + a_y[0][i+1])
+        a_x[0][1] = -G*ms*r_x[0][1]/r[0][i+1]**3 - G*mp*(r_x[1][1] - r_x[0][1])/r_rel**3
+        a_y[0][1] = -G*ms*r_y[0][1]/r[0][i+1]**3 - G*mp*(r_y[1][1] - r_y[0][1])/r_rel**3
+        v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][0] + a_x[0][1])
+        v_y[0][i+1] = v_y[0][i] + 0.5*tau*(a_y[0][0] + a_y[0][1])
         ##############################
         ##############################
-        
+        r_x[0][0] = r_x[0][1]
+        r_y[0][0] = r_y[0][1]
+        r_x[1][0] = r_x[1][1]
+        r_y[1][0] = r_y[1][1]
+        a_x[0][0] = a_x[0][1]
+        a_y[0][0] = a_y[0][1]
+        a_x[1][0] = a_x[1][1]
+        a_y[1][0] = a_y[1][1]
         drawProgressBar(float(i)/Nstep, 60)
     print "\nFine calcolo dati."
             
@@ -231,8 +258,14 @@ def orbit(cond):
         orbit_g.close()
         orbit_t.close()
     
-
-
+    ape_t = max(r[0])
+    per_t = min(r[0])
+    ecc_t = (ape_t - per_t)/(ape_t + per_t)
+    ape_g = max(r[1])
+    per_g = min(r[1])
+    ecc_g = (ape_g - per_g)/(ape_g + per_g)        
+    print ape_t, per_t, ecc_t
+    print ape_g, per_g, ecc_g
 
 print """Programme bla bla bla
 1) Simulare orbita sistema Sole - Terra - pianeta
