@@ -2,7 +2,6 @@
 from cmath import polar
 from math import sqrt, pi
 import sys
-from pylab import ion, show, plot
 
 ####################
 #####   DATI   #####
@@ -34,25 +33,40 @@ v0_yp = 1.3712E+4
 
 def ask_params():
     global Nstep, tau, mt, mp, r0_xt, r0_yt, r0_xp, r0_yp, v0_xt, v0_yt, v0_xp, v0_yp
-    
+
     print "Inserire passo temporale tau (in ore):"
     tau = float(raw_input(">>>"))*3600
+    print 
+
     if operation == "3":
         return None
-    print "Inserire numero di passi (singola orbita Terrestre - % passi con tau == %):"
+
+    best_Nstep = 365.*24.*3600/tau
+    print "Una singola orbita Terrestre verrà eseguita in ~%.3f passi con tau di %s ore):" % (best_Nstep, tau/3600)
+    print "Inserire numero di passi:"
     Nstep = int(raw_input(">>>"))
-    
+    print 
+
+    if Nstep < best_Nstep:
+
+        print "Il programma non sarà in grado di completare una singola orbita terrestre."
+        print 
+
     print "Usare parametri predefiniti? [Y/n/q]"
     while True:
         answer = raw_input(">>>")
         if answer == "Y" or answer == "y":
             if operation == "2":
                 mp = 0
+                r0_xp = 1
+                r0_yp = 1
                 v0_xp = 0
                 v0_yp = 0
             break
         elif answer == "N" or answer == "n":
+            print
             print "Inserire i parametri della simulazione."
+            print
             print "Massa pianeta #1 (kg)"
             mp = float(raw_input(">>>"))
             print "Raggio iniziale orbita #1 (km)"
@@ -76,11 +90,13 @@ def ask_params():
                 r0_yp = 1
                 v0_xp = 0
                 v0_yp = 0
-                break
+            break
         elif answer == "q":
+            print
             print "Bye!"
             break
         else:
+            print
             print "Opzione non valida."
 
 
@@ -104,9 +120,8 @@ def orbit(cond):
     # coordinate #
     # in m e rad #
     # Coordinate cartesiane (r_x, r_y) e polari (phi, r) dei pianeti.
-    r_x = [[0]*Nstep, [0]*Nstep]
-    r_y = [[0]*Nstep, [0]*Nstep]
-
+    r_x = [[0]*2, [0]*2]
+    r_y = [[0]*2, [0]*2]
     phi = [[0]*Nstep, [0]*Nstep] 
     r = [[0]*Nstep, [0]*Nstep]   
     # velocità #
@@ -115,8 +130,8 @@ def orbit(cond):
     v_y = [[0]*Nstep, [0]*Nstep]
     # accelerazioni #
     # in N          #
-    a_x = [[0]*Nstep, [0]*Nstep]
-    a_y = [[0]*Nstep, [0]*Nstep]
+    a_x = [[0]*2, [0]*2]
+    a_y = [[0]*2, [0]*2]
     
     # condizioni iniziali istante 0
     r_x[0][0] = r0_xt
@@ -128,8 +143,9 @@ def orbit(cond):
         coo_p = polar(r_x[i][0] + r_y[i][0]*1j)
         r[i][0] = coo_p[0]
         phi[i][0] = coo_p[1]
-    
-    r_rel = sqrt((r_x[1][0] - r_x[0][0])**2 + (r_y[1][0] - r_y[0][0])**2)
+
+    r_rel = sqrt((r_x[1][0] - r_x[0][0])**2 + (r_y[1][0] - r_y[0][0])**2)    
+
     v_x[0][0] = v0_xt 
     v_y[0][0] = v0_yt 
     v_x[1][0] = v0_xp 
@@ -137,31 +153,12 @@ def orbit(cond):
 
     a_x[0][0] = -G*mp*(r_x[1][0] - r_x[0][0])/r_rel**3 -G*ms*r_x[0][0]/r[0][0]**3
     a_y[0][0] = -G*mp*(r_y[1][0] - r_y[0][0])/r_rel**3 -G*ms*r_y[0][0]/r[0][0]**3
-    a_x[1][0] = (-G*mp*(r_x[0][0] - r_x[1][0])/r_rel**3 -G*ms*r_x[1][0]/r[1][0]**3)*cond
-    a_y[1][0] = (-G*mp*(r_y[0][0] - r_y[1][0])/r_rel**3 -G*ms*r_y[1][0]/r[1][0]**3)*cond
+    a_x[1][0] = cond*(-G*mt*(r_x[0][0] - r_x[1][0])/r_rel**3 -G*ms*r_x[1][0]/r[1][0]**3)
+    a_y[1][0] = cond*(-G*mt*(r_y[0][0] - r_y[1][0])/r_rel**3 -G*ms*r_y[1][0]/r[1][0]**3)
 
+    print
     print "Calcolo dati:"
     for i in range(Nstep-1):
-        ##############################
-        ##############################
-        ### Giove
-        # calcolo dati sfruttando Velocity-Verlet
-        # parte 1
-        r_x[1][1] = r_x[1][0] + v_x[1][i]*tau + 0.5*a_x[1][0]*tau**2
-        r_y[1][1] = r_y[1][0] + v_y[1][i]*tau + 0.5*a_y[1][0]*tau**2
-        # conversione coordinate cartesiane in polari
-        coo_p = polar(r_x[1][1] + r_y[1][1]*1j)
-        r[1][i+1] = coo_p[0]
-        phi[1][i+1] = coo_p[1]
-        # calcolo dati sfruttando Velocity-Verlet
-        # parte 2
-        a_x[1][1] = -G*ms*r_x[1][1]/r[1][i+1]**3*cond
-        a_y[1][1] = -G*ms*r_y[1][1]/r[1][i+1]**3*cond
-        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][0] + a_x[1][1])
-        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][0] + a_y[1][1])
-        ##############################
-        ##############################
-        
         ##############################
         ##############################
         ### Terra
@@ -173,15 +170,33 @@ def orbit(cond):
         coo_p = polar(r_x[0][1] + r_y[0][1]*1j)
         r[0][i+1] = coo_p[0]
         phi[0][i+1] = coo_p[1]
+        ### Giove
+        # calcolo dati sfruttando Velocity-Verlet
+        # parte 1
+        r_x[1][1] = r_x[1][0] + v_x[1][i]*tau + 0.5*a_x[1][0]*tau**2
+        r_y[1][1] = r_y[1][0] + v_y[1][i]*tau + 0.5*a_y[1][0]*tau**2
+        # conversione coordinate cartesiane in polari
+        coo_p = polar(r_x[1][1] + r_y[1][1]*1j)
+        r[1][i+1] = coo_p[0]
+        phi[1][i+1] = coo_p[1]
+
+        r_rel = sqrt((r_x[0][1] - r_x[1][1])**2 + (r_y[0][1] - r_y[1][1])**2)
+
         # calcolo dati sfruttando Velocity-Verlet
         # parte 2
-        r_rel = sqrt((r_x[0][1] - r_x[1][1])**2 + (r_y[0][1] - r_y[1][1])**2)
-        a_x[0][1] = -G*ms*r_x[0][1]/r[0][i+1]**3 - G*mp*(r_x[1][1] - r_x[0][1])/r_rel**3
-        a_y[0][1] = -G*ms*r_y[0][1]/r[0][i+1]**3 - G*mp*(r_y[1][1] - r_y[0][1])/r_rel**3
+        ### Terra
+        a_x[0][1] = -G*ms*r_x[0][1]/r[0][i+1]**3 -G*mp*(r_x[1][1] - r_x[0][1])/r_rel**3
+        a_y[0][1] = -G*ms*r_y[0][1]/r[0][i+1]**3 -G*mp*(r_y[1][1] - r_y[0][1])/r_rel**3
         v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][0] + a_x[0][1])
         v_y[0][i+1] = v_y[0][i] + 0.5*tau*(a_y[0][0] + a_y[0][1])
+        ### Giove
+        a_x[1][1] = cond*(-G*ms*r_x[1][1]/r[1][i+1]**3 - G*mt*(r_x[0][1] - r_x[1][1])/r_rel**3)
+        a_y[1][1] = cond*(-G*ms*r_y[1][1]/r[1][i+1]**3 - G*mt*(r_y[0][1] - r_y[1][1])/r_rel**3)
+        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][0] + a_x[1][1])
+        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][0] + a_y[1][1])
         ##############################
         ##############################
+
         r_x[0][0] = r_x[0][1]
         r_y[0][0] = r_y[0][1]
         r_x[1][0] = r_x[1][1]
@@ -190,22 +205,26 @@ def orbit(cond):
         a_y[0][0] = a_y[0][1]
         a_x[1][0] = a_x[1][1]
         a_y[1][0] = a_y[1][1]
+
         drawProgressBar(float(i)/Nstep, 60)
-    print "\nFine calcolo dati."
+
+    print
+    print "Fine calcolo dati."
+    print
     
 
     # apre i file su cui scrivere i dati con la proprietà 'w'
-    orbit_g = open('orbit_g.dat', 'w') # Giove
+    orbit_g = open('orbit_p.dat', 'w') # Pianeta
     orbit_t = open('orbit_t.dat', 'w') # Terra
     
-    for j in range(cond +1):
+    for j in range(1+1):#cond +1):
         if j == 0:
             planet = "Terra"
             filename = orbit_t                
         elif j == 1:
-            planet = "Giove"
+            planet = ""
             filename = orbit_g
-        print "\nScrittura dati %s su file:" % planet
+        print "Scrittura dati %s su file:" % planet
 
         for i in range(Nstep):
             # scrive i dati su file
@@ -217,7 +236,10 @@ def orbit(cond):
             filename.write("\n")
             
             drawProgressBar(float(i)/Nstep, 60)
-        print "\nFine scrittura dati %s su file." % planet
+
+        print
+        print "Fine scrittura dati %s su file." % planet
+        print
             
     # chiude i file su cui sono stati scritti i dati
     orbit_g.close()
@@ -312,13 +334,14 @@ def kepler(rin, vin, plan):
     print "Costante Keplero:\t", cost_K
 
 print """Programme bla bla bla
-1) Simulare orbita sistema Sole - Terra - pianeta
-2) Simulare e calcolare orbita e parametri di un sistema Sole - pianeta
-q) Per uscire
-"""
+1) Simulare l'orbita di un sistema Sole - Terra - pianeta
+2) Simulare l'orbita e calcolare i parametri di un sistema Sole - pianeta
+3) Verificare la legge di Keplero per i pianeti del Sistema Solare
+q) Per uscire"""
 
 while True:
     operation = raw_input("Scegliere l'operazione da eseguire: ")
+    print
     if operation == "1":
         print "Simulazione orbita sistema Sole - Terra - pianeta"
         ask_params()
