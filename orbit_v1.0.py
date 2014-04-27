@@ -2,6 +2,7 @@
 from cmath import polar
 from math import sqrt, pi
 import sys
+from pylab import ion, show, plot
 
 ####################
 #####   DATI   #####
@@ -36,7 +37,9 @@ def ask_params():
     
     print "Inserire passo temporale tau (in ore):"
     tau = float(raw_input(">>>"))*3600
-    print "Inserire numero di passi (singola orbita Terrestre - 9000 passi con tau == 1):"
+    if operation == "3":
+        return None
+    print "Inserire numero di passi (singola orbita Terrestre - % passi con tau == %):"
     Nstep = int(raw_input(">>>"))
     
     print "Usare parametri predefiniti? [Y/n/q]"
@@ -73,26 +76,7 @@ def ask_params():
                 r0_yp = 1
                 v0_xp = 0
                 v0_yp = 0
-                
-            break
-        elif answer == "q":
-            print "Bye!"
-            break
-        else:
-            print "Opzione non valida."
-
-
-def ask_data_on_file():
-    global data_on_file
-    print "Scrivere dati su file? [Y/n/q]"
-    while True:
-        answer = raw_input(">>>")
-        if answer == "Y" or answer == "y":
-            data_on_file = True
-            break
-        elif answer == "N" or answer == "n":
-            data_on_file = False
-            break
+                break
         elif answer == "q":
             print "Bye!"
             break
@@ -112,7 +96,7 @@ def drawProgressBar(percent, barLen):
 def orbit(cond):
     """Funzione che simula l'orbita di Giove e della Terra, tenendo conto 
     dell'interazione Giove-Terra"""
-
+    global r, v_x, v_y
     ##############
     # Crea matrici 2*Nstep (righe*colonne) con zeri. 
     # Prima riga dati Terra, seconda riga dati Giove.
@@ -122,8 +106,7 @@ def orbit(cond):
     # Coordinate cartesiane (r_x, r_y) e polari (phi, r) dei pianeti.
     r_x = [[0]*Nstep, [0]*Nstep]
     r_y = [[0]*Nstep, [0]*Nstep]
-#    r_x = [[0]*2, [0]*2]
-#    r_y = [[0]*2, [0]*2]
+
     phi = [[0]*Nstep, [0]*Nstep] 
     r = [[0]*Nstep, [0]*Nstep]   
     # velocità #
@@ -134,8 +117,6 @@ def orbit(cond):
     # in N          #
     a_x = [[0]*Nstep, [0]*Nstep]
     a_y = [[0]*Nstep, [0]*Nstep]
-#    a_x = [[0]*2, [0]*2]
-#    a_y = [[0]*2, [0]*2]
     
     # condizioni iniziali istante 0
     r_x[0][0] = r0_xt
@@ -166,22 +147,14 @@ def orbit(cond):
         ### Giove
         # calcolo dati sfruttando Velocity-Verlet
         # parte 1
-#        r_x[1][i+1] = r_x[1][i] + v_x[1][i]*tau + 0.5*a_x[1][i]*tau**2
-#        r_y[1][i+1] = r_y[1][i] + v_y[1][i]*tau + 0.5*a_y[1][i]*tau**2
         r_x[1][1] = r_x[1][0] + v_x[1][i]*tau + 0.5*a_x[1][0]*tau**2
         r_y[1][1] = r_y[1][0] + v_y[1][i]*tau + 0.5*a_y[1][0]*tau**2
-
         # conversione coordinate cartesiane in polari
-#        coo_p = polar(r_x[1][i+1] + r_y[1][i+1]*1j)
         coo_p = polar(r_x[1][1] + r_y[1][1]*1j)
         r[1][i+1] = coo_p[0]
         phi[1][i+1] = coo_p[1]
         # calcolo dati sfruttando Velocity-Verlet
         # parte 2
-#        a_x[1][i+1] = -G*ms*r_x[1][i+1]/r[1][i+1]**3*cond
-#        a_y[1][i+1] = -G*ms*r_y[1][i+1]/r[1][i+1]**3*cond
-#        v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][i] + a_x[1][i+1])
-#        v_y[1][i+1] = v_y[1][i] + 0.5*tau*(a_y[1][i] + a_y[1][i+1])
         a_x[1][1] = -G*ms*r_x[1][1]/r[1][i+1]**3*cond
         a_y[1][1] = -G*ms*r_y[1][1]/r[1][i+1]**3*cond
         v_x[1][i+1] = v_x[1][i] + 0.5*tau*(a_x[1][0] + a_x[1][1])
@@ -194,23 +167,15 @@ def orbit(cond):
         ### Terra
         # calcolo dati sfruttando Velocity-Verlet
         # parte 1
-#        r_x[0][i+1] = r_x[0][i] + v_x[0][i]*tau + 0.5*a_x[0][i]*tau**2
-#        r_y[0][i+1] = r_y[0][i] + v_y[0][i]*tau + 0.5*a_y[0][i]*tau**2
         r_x[0][1] = r_x[0][0] + v_x[0][i]*tau + 0.5*a_x[0][0]*tau**2
         r_y[0][1] = r_y[0][0] + v_y[0][i]*tau + 0.5*a_y[0][0]*tau**2
         # conversione coordinate cartesiane in polari
-#        coo_p = polar(r_x[0][i+1] + r_y[0][i+1]*1j)
         coo_p = polar(r_x[0][1] + r_y[0][1]*1j)
         r[0][i+1] = coo_p[0]
         phi[0][i+1] = coo_p[1]
         # calcolo dati sfruttando Velocity-Verlet
         # parte 2
-#        r_rel = sqrt((r_x[0][i+1] - r_x[1][i+1])**2 + (r_y[0][i+1] - r_y[1][i+1])**2)
         r_rel = sqrt((r_x[0][1] - r_x[1][1])**2 + (r_y[0][1] - r_y[1][1])**2)
-#        a_x[0][i+1] = -G*ms*r_x[0][i+1]/r[0][i+1]**3 - G*mp*(r_x[1][i+1] - r_x[0][i+1])/r_rel**3
-#        a_y[0][i+1] = -G*ms*r_y[0][i+1]/r[0][i+1]**3 - G*mp*(r_y[1][i+1] - r_y[0][i+1])/r_rel**3
-#        v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][i] + a_x[0][i+1])
-#        v_y[0][i+1] = v_y[0][i] + 0.5*tau*(a_y[0][i] + a_y[0][i+1])
         a_x[0][1] = -G*ms*r_x[0][1]/r[0][i+1]**3 - G*mp*(r_x[1][1] - r_x[0][1])/r_rel**3
         a_y[0][1] = -G*ms*r_y[0][1]/r[0][i+1]**3 - G*mp*(r_y[1][1] - r_y[0][1])/r_rel**3
         v_x[0][i+1] = v_x[0][i] + 0.5*tau*(a_x[0][0] + a_x[0][1])
@@ -227,36 +192,36 @@ def orbit(cond):
         a_y[1][0] = a_y[1][1]
         drawProgressBar(float(i)/Nstep, 60)
     print "\nFine calcolo dati."
-            
-    if data_on_file:
+    
 
-        # apre i file su cui scrivere i dati con la proprietà 'w'
-        orbit_g = open('orbit_g.dat', 'w') # Giove
-        orbit_t = open('orbit_t.dat', 'w') # Terra
+    # apre i file su cui scrivere i dati con la proprietà 'w'
+    orbit_g = open('orbit_g.dat', 'w') # Giove
+    orbit_t = open('orbit_t.dat', 'w') # Terra
+    
+    for j in range(cond +1):
+        if j == 0:
+            planet = "Terra"
+            filename = orbit_t                
+        elif j == 1:
+            planet = "Giove"
+            filename = orbit_g
+        print "\nScrittura dati %s su file:" % planet
 
-        for j in range(1+1):#cond +1):
-            if j == 0:
-                planet = "Terra"
-                filename = orbit_t                
-            elif j == 1:
-                planet = "Giove"
-                filename = orbit_g
-            print "\nScrittura dati %s su file:" % planet
-            for i in range(Nstep):
-                # scrive i dati su file
-                # j = 0 > Terra
-                # j = 1 > Giove
-                filename.write(str(phi[j][i]))
-                filename.write("\t")
-                filename.write(str(r[j][i]))
-                filename.write("\n")
-                
-                drawProgressBar(float(i)/Nstep, 60)
-            print "\nFine scrittura dati %s su file." % planet
+        for i in range(Nstep):
+            # scrive i dati su file
+            # j = 0 > Terra
+            # j = 1 > Giove
+            filename.write(str(phi[j][i]))
+            filename.write("\t")
+            filename.write(str(r[j][i]))
+            filename.write("\n")
             
-        # chiude i file su cui sono stati scritti i dati
-        orbit_g.close()
-        orbit_t.close()
+            drawProgressBar(float(i)/Nstep, 60)
+        print "\nFine scrittura dati %s su file." % planet
+            
+    # chiude i file su cui sono stati scritti i dati
+    orbit_g.close()
+    orbit_t.close()
     
     ape_t = max(r[0])
     per_t = min(r[0])
@@ -266,6 +231,85 @@ def orbit(cond):
     ecc_g = (ape_g - per_g)/(ape_g + per_g)        
     print ape_t, per_t, ecc_t
     print ape_g, per_g, ecc_g
+
+
+def calc_data():
+    vel_ang = open('omega.dat', 'w')
+    kin = open('e_cinetica.dat', 'w')
+    pot = open('e_potenziale', 'w')
+    tot = open('e_totale', 'w')
+    time = [0]*Nstep
+    v = [0]*Nstep
+    omega = [0]*Nstep
+    K = [0]*Nstep
+    U = [0]*Nstep
+    Tot = [0]*Nstep
+    for k in range(Nstep):
+        time[k] = k*tau
+        v = sqrt(v_x[0][k]**2 + v_y[0][k]**2)
+        omega[k] = v/r[0][k]
+        K[k] = 0.5*omega[k]**2*mt*r[0][k]**2
+        U[k] = -G*ms*mt/r[0][k]
+        Tot[k] = K[k] + U[k]
+    
+        vel_ang.write(str(r[0][k]))
+        vel_ang.write("\t")
+        vel_ang.write(str(omega[k]))
+        vel_ang.write("\n")
+        
+        kin.write(str(time[k]))
+        kin.write("\t")
+        kin.write(str(K[k]))
+        kin.write("\n")
+        
+        pot.write(str(time[k]))
+        pot.write("\t")
+        pot.write(str(U[k]))
+        pot.write("\n")
+        
+        tot.write(str(time[k]))
+        tot.write("\t")
+        tot.write(str(Tot[k]))
+        tot.write("\n")
+
+
+def kepler(rin, vin, plan):
+
+    tau = 600
+    r_x = rin
+    r_y = 0
+    v_x = 0
+    v_y = vin
+    coo_p = polar(r_x + r_y*1j)
+    r = coo_p[0]
+    a_x = [-G*ms*r_x/r**3,[] ]
+    a_y = [-G*ms*r_y/r**3,[] ]
+    time = 0
+    while coo_p[1] >= 0:
+        r_x += v_x*tau + 0.5*a_x[0]*tau**2
+        r_y += v_y*tau + 0.5*a_y[0]*tau**2
+
+        coo_p = polar(r_x + r_y*1j)
+        r = coo_p[0]
+
+        a_x[1] = -G*ms*r_x/r**3
+        a_y[1] = -G*ms*r_y/r**3
+        v_x += 0.5*tau*(a_x[0] + a_x[1])
+        v_y += 0.5*tau*(a_y[0] + a_y[1])
+
+        a_x[0] = a_x[1]
+        a_y[0] = a_y[1]
+        
+        time += tau
+
+    print "Dati relativi a ", plan
+    T = (time)*2
+    print "Periodo orbitale:\t", T/(24.*60*60), " giorni"
+    semiax = (abs(rin) + abs(r_x))/2
+    print "Semiasse maggiore:\t", semiax/1000, " km"
+
+    cost_K = T**2/semiax**3
+    print "Costante Keplero:\t", cost_K
 
 print """Programme bla bla bla
 1) Simulare orbita sistema Sole - Terra - pianeta
@@ -278,15 +322,24 @@ while True:
     if operation == "1":
         print "Simulazione orbita sistema Sole - Terra - pianeta"
         ask_params()
-        ask_data_on_file()
         orbit(1)
         break
     elif operation == "2":
         print "Simulazione orbita e calcolo parametri di un sistema Sole - pianeta"
         ask_params()
-        ask_data_on_file()
         orbit(0)
+        calc_data()
+        break
+    elif operation == "3":
+        ask_params()
+        plan = ["Mercurio", "Venere", "Terra", "Marte", "Giove", "Saturno", "Urano", "Nettuno"]
+        rad = [0.46001272E+11, 1.07476002E+11, 1.47098074E+11, 2.06664545e+11, 7.40742598E+11, 13.49467375E+11, 27.35555035E+11, 44.59631496E+11]
+        vel = [5.898E+4, 3.5020E+4, 3.0287E+4, 2.499E+4, 1.3712E+4, 1.0183E+4, 0.711E+4, 0.5479E+4]
+        for i in range(len(rad)):
+            kepler(rad[i], vel[i], plan[i])
+        print "Teorica =", 4*pi**2/(G*ms)
+        break
+    elif operation =="q":
         break
     else:
         print "Opzione non valida.\n"
-        ans = True
